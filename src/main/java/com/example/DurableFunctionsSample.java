@@ -16,6 +16,7 @@ import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import java.util.Optional;
 
 public class DurableFunctionsSample {
+    // クライアント関数。オーケストレーター関数を開始する
     @FunctionName("StartHelloCities")
     public HttpResponseMessage startHelloCities(
             @HttpTrigger(name = "req", methods = {HttpMethod.GET})HttpRequestMessage<Optional<String>> req,
@@ -28,6 +29,7 @@ public class DurableFunctionsSample {
         return durableContext.createCheckStatusResponse(req, instanceId);
     }
 
+    // オーケストレーター関数。アクションが実行される方法とアクセスの実行順序を書く
     @FunctionName("HelloCities")
     public String helloCitiesOrchestrator(@DurableOrchestrationTrigger(name = "runtimeState") String runtimeState) {
         return OrchestrationRunner.loadAndRun(runtimeState, ctx -> {
@@ -39,6 +41,7 @@ public class DurableFunctionsSample {
         });
     }
 
+    // アクティブティ関数。作業を実行し、必要に応じて値を返す。
     @FunctionName("SayHello")
     public String sayHello(@DurableActivityTrigger(name = "name") String name) {
         return String.format("Hello %s!", name);
