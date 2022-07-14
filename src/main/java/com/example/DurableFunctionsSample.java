@@ -32,7 +32,8 @@ public class DurableFunctionsSample {
             ) {
         DurableTaskClient client = durableContext.getClient();
 //        String instanceId = client.scheduleNewOrchestrationInstance("HelloCities");
-        String instanceId = client.scheduleNewOrchestrationInstance("FanOutFanIn");
+//        String instanceId = client.scheduleNewOrchestrationInstance("FanOutFanIn");
+        String instanceId = client.scheduleNewOrchestrationInstance("Monitor", new JobInfo());
         context.getLogger().info("Created new Java orchestration with instance ID = " + instanceId);
         return durableContext.createCheckStatusResponse(req, instanceId);
     }
