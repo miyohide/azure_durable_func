@@ -14,6 +14,8 @@ import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,6 +66,31 @@ public class DurableFunctionsSample {
         });
     }
 
+    @FunctionName("Monitor")
+    public String monitorOrchestrator(
+            @DurableOrchestrationTrigger(name = "runtimeState") String runtimeState
+    ) {
+        return OrchestrationRunner.loadAndRun(
+                runtimeState, ctx -> {
+                    JobInfo jobInfo = ctx.getInput(JobInfo.class);
+                    String jobId = jobInfo.getJobId();
+                    Instant expiryTime = jobInfo.getExpirationTime();
+
+                    while (ctx.getCurrentInstant().compareTo(expiryTime) < 0) {
+                        String status = ctx.callActivity("GetJobStatus", jobId, String.class).await();
+
+                        if (status.equals("Completed")) {
+                            break;
+                        } else {
+                            Duration pollingDelay = jobInfo.getPollingDelay();
+                            ctx.createTimer(pollingDelay).await();
+                        }
+                    }
+                    return "done";
+                }
+        );
+    }
+
     @FunctionName("F1")
     public List<Integer> f1(@DurableActivityTrigger(name = "f1name") String name) {
         return new ArrayList<>(Arrays.asList(10, 20, 30, 40, 50));
@@ -73,6 +100,11 @@ public class DurableFunctionsSample {
     public Integer f2(@DurableActivityTrigger(name = "f2name") int i, final ExecutionContext context) {
         context.getLogger().info("F2 with i = [" + i + "]");
         return i * 3;
+    }
+
+    @FunctionName("GetJobStatus")
+    public String getJobStatus(@DurableActivityTrigger(name = "getJobStatusName") String name) {
+        return "Completed";
     }
 
     // アクティブティ関数。作業を実行し、必要に応じて値を返す。
