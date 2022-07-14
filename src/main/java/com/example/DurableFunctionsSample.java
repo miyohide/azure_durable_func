@@ -78,6 +78,7 @@ public class DurableFunctionsSample {
                     Instant expiryTime = jobInfo.getExpirationTime();
 
                     while (ctx.getCurrentInstant().compareTo(expiryTime) < 0) {
+                        // ctx.getCurrentInstant() < expiryTime の場合
                         String status = ctx.callActivity("GetJobStatus", jobId, String.class).await();
 
                         if (status.equals("Completed")) {
