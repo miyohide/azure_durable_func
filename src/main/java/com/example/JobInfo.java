@@ -9,7 +9,7 @@ public class JobInfo {
     }
 
     public Instant getExpirationTime() {
-        return Instant.now();
+        return Instant.now().plusSeconds(3_600L);
     }
 
     public Duration getPollingDelay() {
