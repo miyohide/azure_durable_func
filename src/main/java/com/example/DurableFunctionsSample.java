@@ -76,10 +76,12 @@ public class DurableFunctionsSample {
                     JobInfo jobInfo = ctx.getInput(JobInfo.class);
                     String jobId = jobInfo.getJobId();
                     Instant expiryTime = jobInfo.getExpirationTime();
+                    int i = 0;
 
                     while (ctx.getCurrentInstant().compareTo(expiryTime) < 0) {
                         // ctx.getCurrentInstant() < expiryTime の場合
-                        String status = ctx.callActivity("GetJobStatus", jobId, String.class).await();
+                        i += 1;
+                        String status = ctx.callActivity("GetJobStatus", i, String.class).await();
 
                         if (status.equals("Completed")) {
                             break;
@@ -105,8 +107,12 @@ public class DurableFunctionsSample {
     }
 
     @FunctionName("GetJobStatus")
-    public String getJobStatus(@DurableActivityTrigger(name = "getJobStatusName") String name) {
-        return "Completed";
+    public String getJobStatus(@DurableActivityTrigger(name = "getJobStatusName") Integer i) {
+        if (i < 10) {
+            return "Running...";
+        } else {
+            return "Completed";
+        }
     }
 
     // アクティブティ関数。作業を実行し、必要に応じて値を返す。
